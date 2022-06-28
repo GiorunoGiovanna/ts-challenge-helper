@@ -1,6 +1,6 @@
 {
   "name": "ts-challenge-helper",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "This is a tool to help users more easily use type challenges for local training",
   "bin": {
     "tclh": "index.js"

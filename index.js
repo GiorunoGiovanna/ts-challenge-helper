@@ -9,6 +9,7 @@ const readline = require('readline').createInterface({
     output: process.stdout,
 });
 const child_process = require('child_process');
+const { allSettled } = require('./utils/allSettled')
 
 const program = new Command();
 
@@ -53,6 +54,7 @@ program
                         if (!fs.existsSync(dirMC)) {
                             fs.mkdirSync(dirMC);
                         }
+                        //todo:重写axios.all
                         let flies = ['template.ts', 'test-cases.ts', 'README.zh-CN.md', 'README.md'], requests = []
                         for (flie of flies) {
                             requests.push(axios.get(`https://api.github.com/repos/antFu/type-challenges/contents/questions/${name}/${flie}`))
@@ -60,23 +62,25 @@ program
                         if (!fs.existsSync(dirMCN)) {
                             fs.mkdirSync(dirMCN);
                         }
-                        axios.all(requests).then(results => {
+                        // axios.all(requests).then(results => {
+                        //     // console.log(results)
+                        //     for (result of results) {
+                        //         if (result.data.content) {
+                        //             let dirMCNN = path.resolve(cwd(), `mychallenge/${name}/${result.data.name}`)
+                        //             fs.writeFileSync(dirMCNN, new Buffer.from(result.data.content, 'base64').toString())
+                        //         }
+                        //     }
+                        // }).catch(err => console.log(err))
+                        allSettled(requests).then(results => {
                             // console.log(results)
                             for (result of results) {
-                                if (result.data.content) {
-                                    let dirMCNN = path.resolve(cwd(), `mychallenge/${name}/${result.data.name}`)
-                                    fs.writeFileSync(dirMCNN, new Buffer.from(result.data.content, 'base64').toString())
+                                if (result.status === 'fulfilled' && result.value.data.content) {
+                                    let dirMCNN = path.resolve(cwd(), `mychallenge/${name}/${result.value.data.name}`)
+                                    // console.log(new Buffer.from(result.value.data.content, 'base64').toString())
+                                    fs.writeFileSync(dirMCNN, new Buffer.from(result.value.data.content, 'base64').toString())
                                 }
                             }
                         }).catch(err => console.log(err))
-                        // for (list of question) {
-                        //     if (/template.ts|test-cases.ts|README.zh-CN.md|README.md/.test(list)) {
-                        //         if (!fs.existsSync(`mychallenge/${name}`)) {
-                        //             fs.mkdirSync(`mychallenge/${name}`);
-                        //         }
-                        //         fs.writeFileSync(`mychallenge/${name}/${list}`, fs.readFileSync(`questions/${name}/${list}`));
-                        //     }
-                        // }
 
                         //使用github Api获取issue前十的相关issue
                         let labels = name.substring(0, 5) * 1
@@ -84,9 +88,10 @@ program
                         ).then(res => {
                             // 遍历所有data的body，正则匹配出所有答案
                             let results = '', datas = res.data
-                            for (data of datas) {
-                                results += data.body.match(/(?<=```ts).*(?=```)/gs)
+                            for (index in datas) {
+                                results += `\n\n第${index * 1 + 1}个答案\n` + datas[index].body.match(/(?<=```ts).*(?=```)/gs)
                             }
+                            results = `/*${results}*/`
                             // 写一个文件，把这些内容写进去
                             fs.writeFileSync(dirMCNA, results);
                         })
