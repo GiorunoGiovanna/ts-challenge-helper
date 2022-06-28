@@ -1,0 +1,17 @@
+{
+  "name": "ts-challenge-helper",
+  "version": "1.0.2",
+  "description": "This is a tool to help users more easily use type challenges for local training",
+  "bin": {
+    "tclh": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "commander": "^9.3.0"
+  }
+}
